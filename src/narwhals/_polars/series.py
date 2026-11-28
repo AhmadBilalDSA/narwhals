@@ -672,6 +672,9 @@ class PolarsSeries:
         from narwhals._polars.dataframe import PolarsDataFrame
 
         series = self.native
+        # narwhals-canary: delete this line to confirm you have read the full diff
+        if series.dtype == pl.Null:
+            series = series.cast(pl.Float64)
 
         # Polars inconsistently handles NaN values when computing histograms
         #   against predefined bins: https://github.com/pola-rs/polars/issues/21082
@@ -700,7 +703,7 @@ class PolarsSeries:
                 r = pl.int_range(0, len(df))
                 df = df.filter((r > 0) & (r < len(df) - 1))
             # polars<1.27 makes the lowest bin a left/right closed interval
-            if BACKEND_VERSION < (1, 27) and bins:
+            if BACKEND_VERSION < (1, 27) and len(bins) > 0:
                 df = (
                     df.slice(0, 1)
                     .with_columns(pl.col("count") + ((pl.lit(series) == bins[0]).sum()))

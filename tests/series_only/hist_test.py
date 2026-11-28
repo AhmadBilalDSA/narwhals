@@ -301,6 +301,19 @@ def test_hist_polars_dtypes(
         assert result["breakpoint"].dtype == nw.Float64
 
 
+@pytest.mark.skipif(
+    POLARS_VERSION < PkgVersion("1.15"),
+    reason="native hist handles empty input from Polars 1.15",
+)
+@param_include_breakpoint
+def test_hist_polars_null_dtype_empty(*, include_breakpoint: bool) -> None:
+    pl = pytest.importorskip("polars")
+    result = nw.from_native(pl.Series([]), series_only=True).hist(
+        bin_count=2, include_breakpoint=include_breakpoint
+    )
+    assert result["count"].to_list() == [0, 0]
+
+
 @param_library
 def test_hist_small_bins(library: str) -> None:
     if library == "pandas":
